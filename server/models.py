@@ -19,8 +19,10 @@ class Hero(db.Model, SerializerMixin):
     super_name = db.Column(db.String)
 
     # add relationship
+    hero_powers = db.relationship('HeroPower', back_populates='hero', cascade='all, delete-orphan')
 
     # add serialization rules
+    serialize_only = ('id', 'name', 'super_name', 'powers')  # Limit serialized fields
 
     def __repr__(self):
         return f'<Hero {self.id}>'
@@ -34,9 +36,9 @@ class Power(db.Model, SerializerMixin):
     description = db.Column(db.String)
 
     # add relationship
-
+    hero_powers = db.relationship('HeroPower', back_populates='power', cascade='all, delete-orphan')
     # add serialization rules
-
+    serialize_only = ('id', 'name', 'description', 'heroes') 
     # add validation
 
     def __repr__(self):
@@ -50,9 +52,11 @@ class HeroPower(db.Model, SerializerMixin):
     strength = db.Column(db.String, nullable=False)
 
     # add relationships
+    hero = db.relationship('Hero', back_populates='hero_powers')
+    power = db.relationship('Power', back_populates='hero_powers')
 
     # add serialization rules
-
+    serialize_only = ('id', 'strength', 'hero_id', 'power_id') 
     # add validation
 
     def __repr__(self):
