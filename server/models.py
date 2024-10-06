@@ -37,16 +37,19 @@ class Power(db.Model, SerializerMixin):
     name = db.Column(db.String)
     description = db.Column(db.String)
     
-
+    def __init__(self, name, description):
+        self.name = name
+        self.description = description
+        self.validate_power(description)    
     # add relationship
     hero_powers = db.relationship('HeroPower', back_populates='power', cascade='all, delete-orphan')
     # add serialization rules
     serialize_only = ('id', 'name', 'description') 
     # add validation
+    @staticmethod
     def validate_power(description):
         if len(description)<20:
-            return "Invalid description"
-        return "Success"
+            raise ValueError("validation errors")
 
 
     def __repr__(self):
@@ -61,28 +64,25 @@ class HeroPower(db.Model, SerializerMixin):
     hero_id = db.Column(db.Integer, db.ForeignKey('heroes.id'), nullable=False)
     power_id = db.Column(db.Integer, db.ForeignKey('powers.id'), nullable=False)
 
-
+    def __init__(self,strength,hero_id,power_id):
+        self.strength=strength
+        self.hero_id=hero_id
+        self.power_id=power_id
+        self.validate_hero_power(strength)
     # add relationships
     hero = db.relationship('Hero', back_populates='hero_powers')
     power = db.relationship('Power', back_populates='hero_powers')
 
     # add serialization rules
-    serialize_rules = (
-        ('hero_powers', dict(
-            only=('id', 'strength', 'hero_id', 'power_id'),  # Specify fields to include
-            rules=(
-                ('power', dict(
-                    only=('id', 'name', 'description')  # Fields to include from Power
-                )),
-            )
-        )),
-    )
+    serialize_only = ('id', 'strength', 'hero_id', 'power_id')
+
+   
     # add validation
+    @staticmethod
     def validate_hero_power(strength):
         if strength not in [ 'Strong', 'Weak', 'Average']:
-            return "Unidentfied type of strength!"
-        return "Success"
-
+            raise ValueError("validation errors")
+        return
     def __repr__(self):
         return f'<HeroPower {self.id}>'
 
