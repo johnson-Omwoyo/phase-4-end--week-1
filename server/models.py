@@ -18,14 +18,16 @@ class Hero(db.Model, SerializerMixin):
     name = db.Column(db.String)
     super_name = db.Column(db.String)
 
+
     # add relationship
     hero_powers = db.relationship('HeroPower', back_populates='hero', cascade='all, delete-orphan')
 
     # add serialization rules
-    serialize_only = ('id', 'name', 'super_name', 'powers')  # Limit serialized fields
+    serialize_only = ('id', 'name', 'super_name')  # Limit serialized fields
 
     def __repr__(self):
         return f'<Hero {self.id}>'
+
 
 
 class Power(db.Model, SerializerMixin):
@@ -34,12 +36,18 @@ class Power(db.Model, SerializerMixin):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String)
     description = db.Column(db.String)
+    
 
     # add relationship
     hero_powers = db.relationship('HeroPower', back_populates='power', cascade='all, delete-orphan')
     # add serialization rules
-    serialize_only = ('id', 'name', 'description', 'heroes') 
+    serialize_only = ('id', 'name', 'description') 
     # add validation
+    def validate_power(description):
+        if len(description)<20:
+            return "Invalid description"
+        return "Success"
+
 
     def __repr__(self):
         return f'<Power {self.id}>'
@@ -50,14 +58,31 @@ class HeroPower(db.Model, SerializerMixin):
 
     id = db.Column(db.Integer, primary_key=True)
     strength = db.Column(db.String, nullable=False)
+    hero_id = db.Column(db.Integer, db.ForeignKey('heroes.id'), nullable=False)
+    power_id = db.Column(db.Integer, db.ForeignKey('powers.id'), nullable=False)
+
 
     # add relationships
     hero = db.relationship('Hero', back_populates='hero_powers')
     power = db.relationship('Power', back_populates='hero_powers')
 
     # add serialization rules
-    serialize_only = ('id', 'strength', 'hero_id', 'power_id') 
+    serialize_rules = (
+        ('hero_powers', dict(
+            only=('id', 'strength', 'hero_id', 'power_id'),  # Specify fields to include
+            rules=(
+                ('power', dict(
+                    only=('id', 'name', 'description')  # Fields to include from Power
+                )),
+            )
+        )),
+    )
     # add validation
+    def validate_hero_power(strength):
+        if strength not in [ 'Strong', 'Weak', 'Average']:
+            return "Unidentfied type of strength!"
+        return "Success"
 
     def __repr__(self):
         return f'<HeroPower {self.id}>'
+
